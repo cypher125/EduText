@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { auth } from '@/services/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,7 +14,7 @@ import { Badge } from '@/components/ui/badge'
 
 export default function Login() {
   const router = useRouter()
-  const { login } = useAuth()
+  const { } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -25,10 +26,15 @@ export default function Login() {
     setError('')
     
     try {
-      await login(username, password)
-      router.push('/admin/dashboard')
-    } catch {
-      setError('Invalid credentials. Please try again.')
+      const response = await auth.login(username, password)
+      if (response.user.role === 'admin') {
+        router.replace('/admin/dashboard')
+      } else {
+        setError('Access denied: Admin privileges required')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      setError('Invalid credentials')
     } finally {
       setIsLoading(false)
     }
@@ -38,10 +44,10 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-teal-500 to-green-600 flex items-center justify-center p-4">
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
         {/* Left side - Login Form */}
-        <motion.div
+      <motion.div 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
+        transition={{ duration: 0.5 }}
           className="bg-white p-8 rounded-2xl shadow-xl"
         >
           <div className="mb-6 text-center">
@@ -62,38 +68,38 @@ export default function Login() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
+          <div>
               <Label htmlFor="username">Username</Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <Input
+            <Input
                   id="username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="pl-10 border-gray-200"
                   placeholder="Enter your username"
-                  required
+              required
                   disabled={isLoading}
-                />
-              </div>
+            />
+          </div>
             </div>
 
-            <div>
+          <div>
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 border-gray-200"
                   placeholder="Enter your password"
-                  required
+              required
                   disabled={isLoading}
-                />
-              </div>
+            />
+          </div>
             </div>
 
             <Button
@@ -164,7 +170,7 @@ export default function Login() {
               </Button>
             </Link>
           </div>
-        </motion.div>
+      </motion.div>
       </div>
     </div>
   )

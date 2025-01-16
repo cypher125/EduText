@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { usePaystackPayment } from 'react-paystack'
 import { useRouter } from 'next/navigation'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { orders } from '@/services/api'
 
 // Add type for Paystack reference
 interface PaystackReference {
@@ -38,6 +39,40 @@ export default function CheckoutPage() {
 
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
+  const handlePaymentSuccess = async (reference: PaystackReference) => {
+    try {
+      // Create order with all the collected data
+      const orderData = {
+        items: items.map(item => ({
+          textbook: item.id,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        reference: reference.reference,
+        total_amount: total,
+        student_name: `${formData.firstName} ${formData.lastName}`,
+        student_email: formData.email,
+        matric_number: formData.matricNo,
+        department: formData.department,
+        level: formData.level,
+        phone_number: formData.phone
+      }
+
+      const result = await orders.create(orderData)
+      
+      if (result.success) {
+        clearCart()
+        router.push(`/order-success?reference=${reference.reference}`)
+      } else {
+        console.error('Failed to create order:', result.error)
+        alert('Failed to create order. Please contact support.')
+      }
+    } catch (error) {
+      console.error('Error creating order:', error)
+      alert('An error occurred while processing your order.')
+    }
+  }
+
   // Paystack configuration
   const config = {
     reference: new Date().getTime().toString(),
@@ -55,29 +90,22 @@ export default function CheckoutPage() {
           display_name: "Matric Number",
           variable_name: "matric_no",
           value: formData.matricNo
-        },
-        {
-          display_name: "Department",
-          variable_name: "department",
-          value: formData.department
-        },
-        {
-          display_name: "Level",
-          variable_name: "level",
-          value: formData.level
-        },
-        {
-          display_name: "Program Type",
-          variable_name: "program_type",
-          value: formData.programType
         }
       ]
     },
-    currency: 'NGN'
-  }
+    currency: 'NGN',
+    onSuccess: (reference: PaystackReference) => {
+      console.log('Payment successful:', reference);
+      handlePaymentSuccess(reference);
+    },
+    onClose: () => {
+      console.log('Payment closed');
+      alert('Payment was not completed.');
+    }
+  };
 
-  // Initialize payment outside the handler
-  const initializePaystack = usePaystackPayment(config)
+  // Initialize Paystack at component level
+  const initializePayment = usePaystackPayment(config);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -87,23 +115,16 @@ export default function CheckoutPage() {
     }))
   }
 
-  const onSuccess = (reference: PaystackReference) => {
-    console.log('Payment successful:', reference)
-    clearCart()
-    router.push('/order-success')
-  }
-
-  const onClose = () => {
-    console.log('Payment closed')
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    initializePaystack({
-      onSuccess,
-      onClose
-    })
-  }
+    e.preventDefault();
+    if (!formData.email || !formData.firstName || !formData.lastName || !formData.phone || 
+        !formData.matricNo || !formData.department || !formData.level) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    
+    initializePayment(config);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-32">
@@ -279,4 +300,3 @@ export default function CheckoutPage() {
     </div>
   )
 }
-

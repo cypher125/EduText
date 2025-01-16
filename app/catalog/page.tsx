@@ -26,23 +26,6 @@ import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { textbooks as textbooksApi, Textbook } from '@/services/api'
 
-const departments = [
-  "All Departments",
-  "Computer Science",
-  "Mathematics",
-  "Physics",
-  "Chemistry",
-  "Biology"
-]
-
-const levels = [
-  "All Levels",
-  "100",
-  "200", 
-  "300",
-  "400"
-]
-
 export default function Catalog() {
   const { addItem } = useCart()
   const [textbooksList, setTextbooksList] = useState<Textbook[]>([])
@@ -52,6 +35,21 @@ export default function Catalog() {
   const [selectedLevel, setSelectedLevel] = useState("All Levels")
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
+  const [departments, setDepartments] = useState<string[]>([])
+  const [levels, setLevels] = useState<string[]>([])
+
+  useEffect(() => {
+    const loadFilters = async () => {
+      try {
+        const response = await textbooksApi.getFilters()
+        setDepartments(['All Departments', ...response.departments])
+        setLevels(['All Levels', ...response.levels])
+      } catch (error) {
+        console.error('Failed to load filters:', error)
+      }
+    }
+    loadFilters()
+  }, [])
 
   useEffect(() => {
     const loadTextbooks = async () => {
@@ -73,16 +71,7 @@ export default function Catalog() {
     loadTextbooks()
   }, [selectedDepartment, selectedLevel, searchTerm])
 
-  const filteredTextbooks = textbooksList.filter(book => {
-    const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      book.course_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      book.department.name.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesDepartment = selectedDepartment === "All Departments" || book.department.name === selectedDepartment
-    const matchesLevel = selectedLevel === "All Levels" || book.level === selectedLevel
-
-    return matchesSearch && matchesDepartment && matchesLevel
-  })
+  const filteredTextbooks = textbooksList
 
   const pageCount = Math.ceil(filteredTextbooks.length / itemsPerPage)
   const paginatedTextbooks = filteredTextbooks.slice(
@@ -96,18 +85,18 @@ export default function Catalog() {
         {loading ? (
           <div className="text-center">Loading textbooks...</div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-12"
-          >
-            <Badge className="bg-purple-600 text-white mb-4">Browse Textbooks</Badge>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">YabaTech Textbook Catalog</h1>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Find and purchase your required course materials from our comprehensive collection of textbooks.
-            </p>
-          </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12"
+        >
+          <Badge className="bg-purple-600 text-white mb-4">Browse Textbooks</Badge>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">YabaTech Textbook Catalog</h1>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Find and purchase your required course materials from our comprehensive collection of textbooks.
+          </p>
+        </motion.div>
         )}
 
         <motion.div 
@@ -130,11 +119,11 @@ export default function Catalog() {
           <div className="flex gap-4 flex-wrap">
             <div className="flex-1 min-w-[200px]">
               <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Department" />
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filter by Department" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments.map((dept: string) => (
+                  {departments.map(dept => (
                     <SelectItem key={dept} value={dept}>
                       {dept}
                     </SelectItem>
@@ -144,11 +133,11 @@ export default function Catalog() {
             </div>
             <div className="flex-1 min-w-[200px]">
               <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Level" />
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filter by Level" />
                 </SelectTrigger>
                 <SelectContent>
-                  {levels.map((level: string) => (
+                  {levels.map(level => (
                     <SelectItem key={level} value={level}>
                       {level}
                     </SelectItem>
@@ -195,7 +184,7 @@ export default function Catalog() {
                       </CardContent>
                       <CardFooter className="flex justify-between items-center">
                         <div className="text-2xl font-bold text-purple-600">
-                          ₦{book.price.toFixed(2)}
+                          ₦{Number(book.price).toFixed(2)}
                         </div>
                         <Button 
                           onClick={() => addItem({

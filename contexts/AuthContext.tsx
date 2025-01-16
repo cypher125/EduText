@@ -27,6 +27,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }
             } catch (error) {
                 console.error('Failed to load user:', error);
+                // Clear invalid token
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
             } finally {
                 setLoading(false);
             }
@@ -37,6 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (username: string, password: string) => {
         const response = await auth.login(username, password);
+        localStorage.setItem('access_token', response.access);
+        localStorage.setItem('refresh_token', response.refresh);
         setUser(response.user);
     };
 

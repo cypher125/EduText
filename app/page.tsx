@@ -7,7 +7,8 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { Book, GraduationCap, Library, BookOpen, Clock, TabletIcon as DeviceTablet, Shield, Download, CheckCircle, TrendingUp, Users, BookMarked, ArrowRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import Header from "@/components/Header"
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
+import { animate, useInView } from 'framer-motion'
 
 // Featured courses data
 const featuredCourses = [
@@ -44,6 +45,27 @@ const featuredCourses = [
     new: true
   }
 ]
+
+// Add this new component for number animation
+function AnimatedCounter({ from, to, duration = 2, className = "" }) {
+  const nodeRef = useRef<HTMLSpanElement>(null)
+  const inView = useInView(nodeRef, { once: true })
+
+  useEffect(() => {
+    if (inView && nodeRef.current) {
+      const node = nodeRef.current
+      const controls = animate(from, to, {
+        duration,
+        onUpdate(value) {
+          node.textContent = value.toLocaleString('en-US')
+        },
+      })
+      return () => controls.stop()
+    }
+  }, [from, to, duration, inView])
+
+  return <span ref={nodeRef}>{from}</span>
+}
 
 export default function Home() {
   const targetRef = useRef(null)
@@ -176,20 +198,28 @@ export default function Home() {
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {[
-              { number: "10,000+", label: "Active Students", icon: Users },
-              { number: "1,000+", label: "Textbooks", icon: BookMarked },
-              { number: "50+", label: "Departments", icon: Library },
-              { number: "95%", label: "Satisfaction Rate", icon: TrendingUp }
+              { number: 10000, label: "Active Students", icon: Users },
+              { number: 1000, label: "Textbooks", icon: BookMarked },
+              { number: 50, label: "Departments", icon: Library },
+              { number: 95, label: "Satisfaction Rate", icon: TrendingUp, suffix: "%" }
             ].map((stat, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ 
+                  duration: 0.8,
+                  delay: index * 0.2,
+                  ease: "easeOut"
+                }}
                 className="text-center"
               >
                 <stat.icon className="w-8 h-8 mx-auto mb-4 text-teal-600" />
-                <h3 className="text-3xl font-bold mb-2 text-gray-800">{stat.number}</h3>
+                <h3 className="text-3xl font-bold mb-2 text-gray-800">
+                  <AnimatedCounter from={0} to={stat.number} duration={2} />
+                  {stat.suffix}
+                </h3>
                 <p className="text-gray-600">{stat.label}</p>
               </motion.div>
             ))}
@@ -262,7 +292,12 @@ export default function Home() {
 
       {/* Featured Textbooks Section */}
       <div className="py-20 bg-gradient-to-br from-teal-500 to-blue-600">
-        <div className="container mx-auto px-6">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          className="container mx-auto px-6"
+        >
           <div className="text-center mb-16">
             <Badge className="bg-yellow-300 text-gray-900 mb-4">Featured Textbooks</Badge>
             <h2 className="text-4xl font-bold text-white mb-4">Popular Course Materials</h2>
@@ -273,10 +308,19 @@ export default function Home() {
             {featuredCourses.map((course, index) => (
               <motion.div
                 key={course.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ 
+                  duration: 0.5,
+                  delay: index * 0.1,
+                  ease: "easeOut"
+                }}
+                whileHover={{ 
+                  scale: 1.05,
+                  transition: { duration: 0.2 }
+                }}
+                className="bg-white rounded-lg overflow-hidden shadow-lg"
               >
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
@@ -300,17 +344,23 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Testimonials Section */}
       <div className="py-20 bg-gray-900 text-white">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
             <Badge className="bg-yellow-300 text-gray-900 mb-4">Testimonials</Badge>
             <h2 className="text-4xl font-bold mb-4">What Our Students Say</h2>
             <p className="text-gray-300 max-w-2xl mx-auto">Hear from fellow YabaTech students about their experience with our platform.</p>
-          </div>
+          </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
@@ -335,9 +385,18 @@ export default function Home() {
             ].map((testimonial, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ 
+                  delay: index * 0.2,
+                  duration: 0.5,
+                  ease: "easeOut"
+                }}
+                whileHover={{ 
+                  scale: 1.03,
+                  transition: { duration: 0.2 }
+                }}
                 className="bg-gray-800 p-6 rounded-lg"
               >
                 <p className="text-lg mb-4 italic">"{testimonial.quote}"</p>
@@ -353,7 +412,12 @@ export default function Home() {
       </div>
 
       {/* CTA Section */}
-      <div className="relative py-32">
+      <motion.div 
+        className="relative py-32"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+      >
         {/* Fixed Background */}
         <div 
           className="absolute inset-0 bg-fixed bg-cover bg-center"
@@ -381,7 +445,7 @@ export default function Home() {
             </Link>
           </motion.div>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }
