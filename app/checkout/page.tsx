@@ -11,6 +11,7 @@ import { CreditCard, ShieldCheck } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { usePaystackPayment } from 'react-paystack'
 import { useRouter } from 'next/navigation'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 // Add type for Paystack reference
 interface PaystackReference {
@@ -29,6 +30,10 @@ export default function CheckoutPage() {
     firstName: '',
     lastName: '',
     phone: '',
+    matricNo: '',
+    department: '',
+    level: '',
+    programType: '',
   })
 
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -45,6 +50,26 @@ export default function CheckoutPage() {
           display_name: "Customer Name",
           variable_name: "customer_name",
           value: `${formData.firstName} ${formData.lastName}`
+        },
+        {
+          display_name: "Matric Number",
+          variable_name: "matric_no",
+          value: formData.matricNo
+        },
+        {
+          display_name: "Department",
+          variable_name: "department",
+          value: formData.department
+        },
+        {
+          display_name: "Level",
+          variable_name: "level",
+          value: formData.level
+        },
+        {
+          display_name: "Program Type",
+          variable_name: "program_type",
+          value: formData.programType
         }
       ]
     },
@@ -147,6 +172,71 @@ export default function CheckoutPage() {
                       onChange={handleInputChange}
                       required 
                     />
+                  </div>
+                  <div>
+                    <Label htmlFor="matricNo">Matric Number</Label>
+                    <Input 
+                      id="matricNo"
+                      name="matricNo"
+                      value={formData.matricNo}
+                      onChange={handleInputChange}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="department">Department</Label>
+                    <Select 
+                      name="department"
+                      value={formData.department}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select department" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="computer_science">Computer Science</SelectItem>
+                        <SelectItem value="mechanical">Mechanical Engineering</SelectItem>
+                        {/* Add more departments */}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="level">Level</Label>
+                      <Select
+                        name="level"
+                        value={formData.level}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, level: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="nd1">ND 1</SelectItem>
+                          <SelectItem value="nd2">ND 2</SelectItem>
+                          <SelectItem value="nd3">ND 3</SelectItem>
+                          <SelectItem value="hnd1">HND 1</SelectItem>
+                          <SelectItem value="hnd2">HND 2</SelectItem>
+                          <SelectItem value="hnd3">HND 3</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="programType">Program Type</Label>
+                      <Select
+                        name="programType"
+                        value={formData.programType}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, programType: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fulltime">Full Time</SelectItem>
+                          <SelectItem value="parttime">Part Time</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <Button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white">
                     <CreditCard className="mr-2 h-4 w-4" />

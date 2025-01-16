@@ -2,21 +2,16 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  // Check if the request is for an admin route
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    // Skip the root layout for admin routes
-    return NextResponse.next({
-      request: {
-        headers: new Headers({
-          'x-middleware-skip-root-layout': '1',
-        }),
-      },
-    })
+  const token = request.cookies.get('access_token')
+  const isAdminPage = request.nextUrl.pathname.startsWith('/admin')
+
+  if (isAdminPage && !token) {
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: '/admin/:path*',
+  matcher: '/admin/:path*'
 } 

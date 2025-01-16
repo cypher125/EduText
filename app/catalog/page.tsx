@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useCart } from '@/components/CartContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,150 +21,64 @@ import {
 } from "@/components/ui/card"
 import Cart from '@/components/Cart'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Book, BookOpen, GraduationCap, Filter, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Book, GraduationCap, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
+import { textbooks as textbooksApi, Textbook } from '@/services/api'
 
-const textbooks = [
-  { 
-    id: 1, 
-    title: "Engineering Mathematics",
-    course: "MTH101",
-    department: "Engineering",
-    level: "100",
-    price: 59.99,
-    image: "/placeholder.svg",
-    description: "Comprehensive guide to fundamental mathematical concepts in engineering.",
-    rating: 4.5,
-    popular: true
-  },
-  { 
-    id: 2, 
-    title: "Technical Drawing",
-    course: "MEC101",
-    department: "Mechanical Engineering",
-    level: "100",
-    price: 69.99,
-    image: "/placeholder.svg",
-    description: "Essential principles and practices of technical drawing and design.",
-    rating: 4.8,
-    new: true
-  },
-  { 
-    id: 3, 
-    title: "Introduction to Computing",
-    course: "COM101",
-    department: "Computer Science",
-    level: "100",
-    price: 49.99,
-    image: "/placeholder.svg",
-    description: "Fundamental concepts of computer science and programming.",
-    rating: 4.7,
-    popular: true
-  },
-  { 
-    id: 4, 
-    title: "Business Communication",
-    course: "BUS201",
-    department: "Business Administration",
-    level: "200",
-    price: 54.99,
-    image: "/placeholder.svg",
-    description: "Professional communication skills for business environments.",
-    rating: 4.6,
-    new: true
-  },
-  { 
-    id: 5, 
-    title: "Organic Chemistry",
-    course: "CHM201",
-    department: "Chemistry",
-    level: "200",
-    price: 64.99,
-    image: "/placeholder.svg",
-    description: "In-depth study of organic compounds and their reactions.",
-    rating: 4.4,
-    popular: true
-  },
-  { 
-    id: 6, 
-    title: "Principles of Economics",
-    course: "ECO101",
-    department: "Economics",
-    level: "100",
-    price: 52.99,
-    image: "/placeholder.svg",
-    description: "Introduction to microeconomics and macroeconomics principles.",
-    rating: 4.5,
-    new: true
-  },
-  { 
-    id: 7, 
-    title: "Introduction to Psychology",
-    course: "PSY101",
-    department: "Psychology",
-    level: "100",
-    price: 48.99,
-    image: "/placeholder.svg",
-    description: "Overview of basic concepts and theories in psychology.",
-    rating: 4.6,
-    popular: true
-  },
-  { 
-    id: 8, 
-    title: "Fundamentals of Nursing",
-    course: "NUR101",
-    department: "Nursing",
-    level: "100",
-    price: 72.99,
-    image: "/placeholder.svg",
-    description: "Essential knowledge and skills for aspiring nurses.",
-    rating: 4.9,
-    new: true
-  },
-  { 
-    id: 9, 
-    title: "Introduction to Law",
-    course: "LAW101",
-    department: "Law",
-    level: "100",
-    price: 67.99,
-    image: "/placeholder.svg",
-    description: "Basic principles and concepts of legal systems.",
-    rating: 4.7,
-    popular: true
-  },
-  { 
-    id: 10, 
-    title: "Digital Electronics",
-    course: "EEE201",
-    department: "Electrical Engineering",
-    level: "200",
-    price: 59.99,
-    image: "/placeholder.svg",
-    description: "Fundamentals of digital circuits and systems.",
-    rating: 4.5,
-    new: true
-  },
+const departments = [
+  "All Departments",
+  "Computer Science",
+  "Mathematics",
+  "Physics",
+  "Chemistry",
+  "Biology"
 ]
 
-const departments = ["All Departments", "Engineering", "Computer Science", "Business Administration", "Mechanical Engineering", "Chemistry", "Economics", "Psychology", "Nursing", "Law", "Electrical Engineering"]
-const levels = ["All Levels", "100", "200", "300", "400"]
+const levels = [
+  "All Levels",
+  "100",
+  "200", 
+  "300",
+  "400"
+]
 
 export default function Catalog() {
   const { addItem } = useCart()
+  const [textbooksList, setTextbooksList] = useState<Textbook[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedDepartment, setSelectedDepartment] = useState("All Departments")
   const [selectedLevel, setSelectedLevel] = useState("All Levels")
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 6
 
-  const filteredTextbooks = textbooks.filter(book => {
+  useEffect(() => {
+    const loadTextbooks = async () => {
+      try {
+        const params = {
+          department: selectedDepartment !== "All Departments" ? selectedDepartment : undefined,
+          level: selectedLevel !== "All Levels" ? selectedLevel : undefined,
+          search: searchTerm || undefined
+        }
+        const data = await textbooksApi.getAll(params)
+        setTextbooksList(data)
+      } catch (error) {
+        console.error('Failed to load textbooks:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadTextbooks()
+  }, [selectedDepartment, selectedLevel, searchTerm])
+
+  const filteredTextbooks = textbooksList.filter(book => {
     const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      book.course.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      book.department.toLowerCase().includes(searchTerm.toLowerCase())
+      book.course_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      book.department.name.toLowerCase().includes(searchTerm.toLowerCase())
     
-    const matchesDepartment = selectedDepartment === "All Departments" || book.department === selectedDepartment
+    const matchesDepartment = selectedDepartment === "All Departments" || book.department.name === selectedDepartment
     const matchesLevel = selectedLevel === "All Levels" || book.level === selectedLevel
 
     return matchesSearch && matchesDepartment && matchesLevel
@@ -179,18 +93,22 @@ export default function Catalog() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200">
       <div className="container mx-auto px-6 pt-32 pb-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
-        >
-          <Badge className="bg-purple-600 text-white mb-4">Browse Textbooks</Badge>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">YabaTech Textbook Catalog</h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Find and purchase your required course materials from our comprehensive collection of textbooks.
-          </p>
-        </motion.div>
+        {loading ? (
+          <div className="text-center">Loading textbooks...</div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <Badge className="bg-purple-600 text-white mb-4">Browse Textbooks</Badge>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">YabaTech Textbook Catalog</h1>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Find and purchase your required course materials from our comprehensive collection of textbooks.
+            </p>
+          </motion.div>
+        )}
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -216,7 +134,7 @@ export default function Catalog() {
                   <SelectValue placeholder="Select Department" />
                 </SelectTrigger>
                 <SelectContent>
-                  {departments.map((dept) => (
+                  {departments.map((dept: string) => (
                     <SelectItem key={dept} value={dept}>
                       {dept}
                     </SelectItem>
@@ -230,7 +148,7 @@ export default function Catalog() {
                   <SelectValue placeholder="Select Level" />
                 </SelectTrigger>
                 <SelectContent>
-                  {levels.map((level) => (
+                  {levels.map((level: string) => (
                     <SelectItem key={level} value={level}>
                       {level}
                     </SelectItem>
@@ -257,19 +175,19 @@ export default function Catalog() {
                       <CardHeader>
                         <div className="flex justify-between items-start mb-2">
                           <Badge variant="outline" className="bg-purple-50">
-                            {book.course}
+                            {book.course_code}
                           </Badge>
-                          {book.popular && (
+                          {book.is_popular && (
                             <Badge className="bg-orange-500 text-white">Popular</Badge>
                           )}
-                          {book.new && (
+                          {book.is_new && (
                             <Badge className="bg-blue-500 text-white">New</Badge>
                           )}
                         </div>
                         <CardTitle className="text-xl">{book.title}</CardTitle>
                         <CardDescription className="flex items-center gap-2">
                           <GraduationCap className="h-4 w-4" />
-                          {book.department} • Level {book.level}
+                          {book.department.name} • Level {book.level}
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -280,7 +198,12 @@ export default function Catalog() {
                           ₦{book.price.toFixed(2)}
                         </div>
                         <Button 
-                          onClick={() => addItem(book)}
+                          onClick={() => addItem({
+                            id: book.id,
+                            title: book.title,
+                            price: book.price,
+                            quantity: 1
+                          })}
                           className="bg-purple-600 hover:bg-purple-700 text-white"
                         >
                           <Book className="mr-2 h-4 w-4" />
@@ -339,4 +262,3 @@ export default function Catalog() {
     </div>
   )
 }
-

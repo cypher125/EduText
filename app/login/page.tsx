@@ -1,79 +1,171 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { motion } from 'framer-motion'
-import { User, Lock } from 'lucide-react'
-import Header from "@/components/Header"
+import { User, Lock, AlertCircle, BookOpen, Shield, ArrowRight } from 'lucide-react'
+import Link from 'next/link'
+import { Badge } from '@/components/ui/badge'
 
 export default function Login() {
-  const [email, setEmail] = useState('')
+  const router = useRouter()
+  const { login } = useAuth()
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle login logic here
-    console.log('Login attempt with:', { email, password })
+    setIsLoading(true)
+    setError('')
+    
+    try {
+      await login(username, password)
+      router.push('/admin/dashboard')
+    } catch {
+      setError('Invalid credentials. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f5ed]">
-      <Header />
-      <motion.div 
-        className="container mx-auto px-6 py-8 pt-32 max-w-md"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <h1 className="text-3xl font-bold mb-8 text-center text-[#34480f]">Login to YabaTech EduText Hub</h1>
-        <motion.form 
-          onSubmit={handleSubmit} 
-          className="space-y-4 bg-white p-8 rounded-lg shadow-lg"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
+    <div className="min-h-screen bg-gradient-to-br from-teal-500 to-green-600 flex items-center justify-center p-4">
+      <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
+        {/* Left side - Login Form */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white p-8 rounded-2xl shadow-xl"
         >
-          <div>
-            <Label htmlFor="email" className="flex items-center text-[#34480f]">
-              <User className="mr-2" />
-              Email
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="mt-1 border-[#5c8758]"
-            />
+          <div className="mb-6 text-center">
+            <Badge className="bg-yellow-300 text-gray-900 mb-4">Staff Portal</Badge>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back!</h1>
+            <p className="text-gray-600">Sign in to access your dashboard</p>
           </div>
-          <div>
-            <Label htmlFor="password" className="flex items-center text-[#34480f]">
-              <Lock className="mr-2" />
-              Password
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="mt-1 border-[#5c8758]"
-            />
-          </div>
-          <Button type="submit" className="w-full bg-[#5c8758] hover:bg-[#47703e] text-[#f0f5ed]">Login</Button>
-        </motion.form>
-        <motion.p 
-          className="mt-4 text-center text-[#34480f]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-red-50 text-red-600 p-4 rounded-lg mb-6 flex items-center"
+            >
+              <AlertCircle className="h-5 w-5 mr-2" />
+              {error}
+            </motion.div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <Label htmlFor="username">Username</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <Input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="pl-10 border-gray-200"
+                  placeholder="Enter your username"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 border-gray-200"
+                  placeholder="Enter your password"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full bg-teal-600 hover:bg-teal-700"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                />
+              ) : (
+                <>Sign In <ArrowRight className="ml-2 h-5 w-5" /></>
+              )}
+            </Button>
+          </form>
+        </motion.div>
+
+        {/* Right side - Features */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="text-white space-y-8 p-4"
         >
-          Don't have an account? <a href="/register" className="text-[#5c8758] hover:underline">Register here</a>
-        </motion.p>
-      </motion.div>
+          <h2 className="text-3xl font-bold mb-6">Staff Portal Features</h2>
+          
+          {[
+            {
+              icon: BookOpen,
+              title: "Manage Textbooks",
+              description: "Add, edit, and organize course materials efficiently"
+            },
+            {
+              icon: Shield,
+              title: "Secure Access",
+              description: "Protected portal with role-based permissions"
+            },
+            {
+              icon: User,
+              title: "Student Management",
+              description: "Track student access and usage analytics"
+            }
+          ].map((feature, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 + index * 0.1 }}
+              className="flex items-start space-x-4"
+            >
+              <div className="bg-white/10 p-3 rounded-lg">
+                <feature.icon className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">{feature.title}</h3>
+                <p className="text-white/80">{feature.description}</p>
+              </div>
+            </motion.div>
+          ))}
+
+          <div className="pt-6">
+            <Link href="/">
+              <Button variant="outline" className="text-white border-white hover:bg-white hover:text-gray-900">
+                Back to Home
+              </Button>
+            </Link>
+          </div>
+        </motion.div>
+      </div>
     </div>
   )
 }
