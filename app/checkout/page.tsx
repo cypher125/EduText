@@ -12,6 +12,15 @@ import { Badge } from '@/components/ui/badge'
 import { usePaystackPayment } from 'react-paystack'
 import { useRouter } from 'next/navigation'
 
+// Add type for Paystack reference
+interface PaystackReference {
+  reference: string;
+  status: string;
+  trans: string;
+  transaction: string;
+  message: string;
+}
+
 export default function CheckoutPage() {
   const router = useRouter()
   const { items, clearCart } = useCart()
@@ -29,7 +38,7 @@ export default function CheckoutPage() {
     reference: new Date().getTime().toString(),
     email: formData.email,
     amount: Math.round(total * 100), // Convert to kobo
-    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY!,
+    publicKey: 'pk_test_b7c598a5740fc0d964a012c414e85a72999e41f3',
     metadata: {
       custom_fields: [
         {
@@ -38,10 +47,12 @@ export default function CheckoutPage() {
           value: `${formData.firstName} ${formData.lastName}`
         }
       ]
-    }
+    },
+    currency: 'NGN'
   }
 
-  const initializePayment = usePaystackPayment(config)
+  // Initialize payment outside the handler
+  const initializePaystack = usePaystackPayment(config)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -51,12 +62,10 @@ export default function CheckoutPage() {
     }))
   }
 
-  // Paystack callback functions
-  const onSuccess = (reference: any) => {
+  const onSuccess = (reference: PaystackReference) => {
     console.log('Payment successful:', reference)
-    clearCart() // Clear the cart after successful payment
-    // Save order to database here
-    router.push('/order-success') // Redirect to success page
+    clearCart()
+    router.push('/order-success')
   }
 
   const onClose = () => {
@@ -65,7 +74,10 @@ export default function CheckoutPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    initializePayment(onSuccess, onClose)
+    initializePaystack({
+      onSuccess,
+      onClose
+    })
   }
 
   return (
