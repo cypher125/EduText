@@ -4,12 +4,10 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from '@/components/ui/button'
-import { motion } from 'framer-motion'
 import { 
   BookOpen, 
   TrendingUp, 
   DollarSign,
-  FileText,
   ShoppingBag,
   ArrowUpRight,
   ArrowDownRight

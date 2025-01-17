@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from '@/components/ui/badge'
-import { 
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -29,8 +29,9 @@ import {
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Edit, Eye, Trash2 } from 'lucide-react'
+import { Plus, Edit, Eye, Trash2, ArrowLeft } from 'lucide-react'
 import { textbooks } from '@/services/api'
+import Link from 'next/link'
 
 export default function TextbooksPage() {
   const [textbooksList, setTextbooksList] = useState([])
@@ -129,11 +130,18 @@ export default function TextbooksPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Textbooks Management</h1>
-          <p className="text-gray-500">Manage your textbook inventory and details</p>
-        </div>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Link href="/admin/dashboard">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Textbooks</h1>
+            <p className="text-gray-500">Manage your textbook inventory</p>
+              </div>
+              </div>
         <Button onClick={handleAddNew} className="bg-purple-600 hover:bg-purple-700">
           <Plus className="mr-2 h-4 w-4" /> Add New Textbook
         </Button>
@@ -154,7 +162,23 @@ export default function TextbooksPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All Departments</SelectItem>
-                {/* Add department options dynamically */}
+                {/* School of Technology */}
+                <SelectItem value="computer_science">Computer Science</SelectItem>
+                <SelectItem value="food_technology">Food Technology</SelectItem>
+                <SelectItem value="science_laboratory">Science Laboratory Technology</SelectItem>
+                <SelectItem value="hospitality_management">Hospitality Management</SelectItem>
+                <SelectItem value="nutrition_dietetics">Nutrition and Dietetics</SelectItem>
+                <SelectItem value="leisure_tourism">Leisure and Tourism</SelectItem>
+                
+                {/* School of Engineering */}
+                <SelectItem value="computer_engineering">Computer Engineering</SelectItem>
+                <SelectItem value="civil_engineering">Civil Engineering</SelectItem>
+                <SelectItem value="electrical_engineering">Electrical/Electronic</SelectItem>
+                <SelectItem value="mechanical_engineering">Mechanical Engineering</SelectItem>
+                <SelectItem value="chemical_engineering">Chemical Engineering</SelectItem>
+                <SelectItem value="metallurgical_engineering">Metallurgical Engineering</SelectItem>
+                
+                {/* Continue with other departments as above */}
               </SelectContent>
             </Select>
           </div>
@@ -210,7 +234,7 @@ export default function TextbooksPage() {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>{editingTextbook ? 'Edit Textbook' : 'Add New Textbook'}</DialogTitle>
           </DialogHeader>
@@ -223,9 +247,125 @@ export default function TextbooksPage() {
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
                   className="col-span-3"
+                  required
                 />
               </div>
-              {/* Add other form fields similarly */}
+              
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="course_code" className="text-right">Course Code</Label>
+                <Input
+                  id="course_code"
+                  value={formData.course_code}
+                  onChange={(e) => setFormData({...formData, course_code: e.target.value})}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="department" className="text-right">Department</Label>
+                <Select 
+                  value={formData.department}
+                  onValueChange={(value) => setFormData({...formData, department: value})}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {/* School of Technology */}
+                    <SelectItem value="computer_science">Computer Science</SelectItem>
+                    <SelectItem value="food_technology">Food Technology</SelectItem>
+                    <SelectItem value="science_laboratory">Science Laboratory Technology</SelectItem>
+                    <SelectItem value="hospitality_management">Hospitality Management Technology</SelectItem>
+                    <SelectItem value="nutrition_dietetics">Nutrition and Dietetics</SelectItem>
+                    <SelectItem value="leisure_tourism">Leisure and Tourism Management</SelectItem>
+                    
+                    {/* School of Engineering */}
+                    <SelectItem value="computer_engineering">Computer Engineering</SelectItem>
+                    <SelectItem value="civil_engineering">Civil Engineering</SelectItem>
+                    <SelectItem value="electrical_engineering">Electrical/Electronic Engineering</SelectItem>
+                    <SelectItem value="mechanical_engineering">Mechanical Engineering</SelectItem>
+                    <SelectItem value="chemical_engineering">Chemical Engineering</SelectItem>
+                    <SelectItem value="metallurgical_engineering">Metallurgical Engineering</SelectItem>
+                    
+                    {/* School of Management */}
+                    <SelectItem value="accountancy">Accountancy</SelectItem>
+                    <SelectItem value="banking_finance">Banking and Finance</SelectItem>
+                    <SelectItem value="business_admin">Business Administration</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="office_technology">Office Technology Management</SelectItem>
+                    
+                    {/* School of Liberal Studies */}
+                    <SelectItem value="mass_comm">Mass Communication</SelectItem>
+                    <SelectItem value="arts_design">Arts and Design</SelectItem>
+                    <SelectItem value="music_technology">Music Technology</SelectItem>
+                    
+                    {/* School of Environmental Studies */}
+                    <SelectItem value="architecture">Architecture</SelectItem>
+                    <SelectItem value="building_technology">Building Technology</SelectItem>
+                    <SelectItem value="quantity_surveying">Quantity Surveying</SelectItem>
+                    <SelectItem value="urban_planning">Urban and Regional Planning</SelectItem>
+                    
+                    {/* School of Art, Design and Printing */}
+                    <SelectItem value="printing_technology">Printing Technology</SelectItem>
+                    <SelectItem value="graphics_design">Graphics Design</SelectItem>
+                    <SelectItem value="industrial_design">Industrial Design</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="level" className="text-right">Level</Label>
+                <Select 
+                  value={formData.level}
+                  onValueChange={(value) => setFormData({...formData, level: value})}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ND1">ND1</SelectItem>
+                    <SelectItem value="ND2">ND2</SelectItem>
+                    <SelectItem value="HND1">HND1</SelectItem>
+                    <SelectItem value="HND2">HND2</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="price" className="text-right">Price (₦)</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  value={formData.price}
+                  onChange={(e) => setFormData({...formData, price: e.target.value})}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="stock" className="text-right">Stock</Label>
+                <Input
+                  id="stock"
+                  type="number"
+                  value={formData.stock}
+                  onChange={(e) => setFormData({...formData, stock: e.target.value})}
+                  className="col-span-3"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description" className="text-right">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className="col-span-3"
+                  rows={4}
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button type="submit">

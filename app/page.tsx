@@ -7,44 +7,21 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { Book, GraduationCap, Library, BookOpen, Clock, TabletIcon as DeviceTablet, Shield, Download, CheckCircle, TrendingUp, Users, BookMarked, ArrowRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import Header from "@/components/Header"
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { animate, useInView } from 'framer-motion'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 
-// Featured courses data
-const featuredCourses = [
-  {
-    id: 1,
-    title: "Engineering Mathematics",
-    department: "Engineering",
-    level: "100",
-    price: 4999,
-    popular: true
-  },
-  {
-    id: 2,
-    title: "Business Communication",
-    department: "Business Admin",
-    level: "200",
-    price: 3999,
-    new: true
-  },
-  {
-    id: 3,
-    title: "Computer Programming",
-    department: "Computer Science",
-    level: "100",
-    price: 5999,
-    popular: true
-  },
-  {
-    id: 4,
-    title: "Electrical Circuits",
-    department: "Electrical Engineering",
-    level: "200",
-    price: 4499,
-    new: true
-  }
-]
+// Update the interface for courses
+interface FeaturedCourse {
+  id: number | string
+  title: string
+  department: string
+  level: string
+  price: number
+  stock: number
+  popular?: boolean
+  new?: boolean
+}
 
 // Add this new component for number animation
 function AnimatedCounter({ from, to, duration = 2, className = "" }) {
@@ -65,6 +42,98 @@ function AnimatedCounter({ from, to, duration = 2, className = "" }) {
   }, [from, to, duration, inView])
 
   return <span ref={nodeRef}>{from}</span>
+}
+
+// Update the featured courses section
+const FeaturedCourses = () => {
+  const [courses, setCourses] = useState<FeaturedCourse[]>([])
+
+  useEffect(() => {
+    const fetchFeaturedCourses = async () => {
+      try {
+        const response = await textbooks.getAll()
+        // Filter and transform the data for featured courses
+        const featuredCourses = response
+          .filter(book => book.stock > 0) // Only show in-stock books
+          .slice(0, 4) // Limit to 4 featured courses
+          .map(book => ({
+            id: book.id.toString(),
+            title: book.title,
+            department: book.department,
+            level: `${book.level} Level`, // Format the level correctly
+            price: parseFloat(book.price),
+            stock: book.stock,
+            popular: book.stock < 20, // Mark as popular if stock is getting low
+            new: new Date(book.created_at).getTime() > Date.now() - (30 * 24 * 60 * 60 * 1000) // Mark as new if added in last 30 days
+          }))
+        setCourses(featuredCourses)
+      } catch (error) {
+        console.error('Failed to fetch featured courses:', error)
+      }
+    }
+
+    fetchFeaturedCourses()
+  }, [])
+
+  return (
+    <section className="py-20 bg-gradient-to-r from-teal-500 to-blue-600">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <Badge className="mb-4">Featured Textbooks</Badge>
+          <h2 className="text-4xl font-bold text-white mb-4">
+            Popular Course Materials
+          </h2>
+          <p className="text-gray-100">
+            Discover the most sought-after textbooks across different departments.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {courses.map((course) => (
+            <motion.div
+              key={course.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="relative"
+            >
+              <Card className="h-full bg-white/95 backdrop-blur-sm">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <Badge variant={course.level.includes('100') ? 'default' : 'secondary'}>
+                      {course.level}
+                    </Badge>
+                    <div className="space-x-2">
+                      {course.popular && (
+                        <Badge variant="destructive">Popular</Badge>
+                      )}
+                      {course.new && (
+                        <Badge variant="secondary">New</Badge>
+                      )}
+                    </div>
+                  </div>
+                  <CardTitle className="text-xl mt-4">{course.title}</CardTitle>
+                  <CardDescription>{course.department}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-between items-center">
+                    <p className="text-2xl font-bold text-purple-600">
+                      ₦{course.price.toLocaleString()}
+                    </p>
+                    <Link href={`/catalog?book=${course.id}`}>
+                      <Button className="bg-purple-600 hover:bg-purple-700">
+                        View Details
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
 }
 
 export default function Home() {
@@ -290,62 +359,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Featured Textbooks Section */}
-      <div className="py-20 bg-gradient-to-br from-teal-500 to-blue-600">
-        <motion.div 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="container mx-auto px-6"
-        >
-          <div className="text-center mb-16">
-            <Badge className="bg-yellow-300 text-gray-900 mb-4">Featured Textbooks</Badge>
-            <h2 className="text-4xl font-bold text-white mb-4">Popular Course Materials</h2>
-            <p className="text-teal-100 max-w-2xl mx-auto">Discover the most sought-after textbooks across different departments.</p>
-          </div>
-
-          <div className="grid md:grid-cols-4 gap-6">
-            {featuredCourses.map((course, index) => (
-              <motion.div
-                key={course.id}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ 
-                  duration: 0.5,
-                  delay: index * 0.1,
-                  ease: "easeOut"
-                }}
-                whileHover={{ 
-                  scale: 1.05,
-                  transition: { duration: 0.2 }
-                }}
-                className="bg-white rounded-lg overflow-hidden shadow-lg"
-              >
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <Badge className="bg-teal-500 text-white">{course.level} Level</Badge>
-                    {course.popular && (
-                      <Badge className="bg-orange-500 text-white">Popular</Badge>
-                    )}
-                    {course.new && (
-                      <Badge className="bg-blue-500 text-white">New</Badge>
-                    )}
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">{course.title}</h3>
-                  <p className="text-gray-600 mb-4">{course.department}</p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xl font-bold text-teal-600">₦{course.price.toLocaleString()}</span>
-                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
+      <FeaturedCourses />
 
       {/* Testimonials Section */}
       <div className="py-20 bg-gray-900 text-white">

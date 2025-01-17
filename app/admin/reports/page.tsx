@@ -11,12 +11,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Download, X, Calendar } from 'lucide-react'
+import { Download, X, Calendar, ArrowLeft } from 'lucide-react'
 import { orders, textbooks } from '@/services/api'
 import { Badge } from '@/components/ui/badge'
 import { DateRangePicker } from '@/components/ui/date-range-picker'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
+import Link from 'next/link'
 
 interface Filter {
   type: string
@@ -162,10 +163,17 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Link href="/admin/dashboard">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
         <div>
-          <h1 className="text-3xl font-bold">Sales Reports</h1>
-          <p className="text-gray-500">Generate and download filtered sales reports</p>
+            <h1 className="text-3xl font-bold">Sales Reports</h1>
+            <p className="text-gray-500">Generate and download filtered sales reports</p>
+          </div>
         </div>
       </div>
 
@@ -190,18 +198,18 @@ export default function ReportsPage() {
                   key={filterType} 
                   onValueChange={(value) => addFilter(filterType, value)}
                 >
-                  <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder={`Filter by ${filterType}`} />
-                  </SelectTrigger>
-                  <SelectContent>
+            </SelectTrigger>
+            <SelectContent>
                     <SelectItem value="all">All {filterType}s</SelectItem>
                     {Array.from(filterOptions[`${filterType}s` as keyof typeof filterOptions]).map(option => (
                       <SelectItem key={option} value={option}>{option}</SelectItem>
                     ))}
-                  </SelectContent>
-                </Select>
+            </SelectContent>
+          </Select>
               ))}
-            </div>
+      </div>
 
             {activeFilters.length > 0 && (
               <div className="flex flex-wrap gap-2">
@@ -219,8 +227,8 @@ export default function ReportsPage() {
               </div>
             )}
           </div>
-        </CardHeader>
-        <CardContent>
+            </CardHeader>
+            <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
@@ -245,8 +253,8 @@ export default function ReportsPage() {
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
     </div>
   )
 } 

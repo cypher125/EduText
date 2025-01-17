@@ -1,5 +1,3 @@
-import { useRouter } from 'next/navigation'
-import api from './api'
 
 export const auth = {
   logout: () => {

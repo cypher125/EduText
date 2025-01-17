@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from '@/components/ui/badge'
-import { Search, Eye, Mail } from 'lucide-react'
+import { Search, Eye, Mail, ArrowLeft } from 'lucide-react'
 import { orders } from '@/services/api'
 import Link from 'next/link'
 
@@ -89,10 +89,17 @@ export default function StudentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Students</h1>
-          <p className="text-gray-500">View students who have purchased textbooks</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Link href="/admin/dashboard">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Students</h1>
+            <p className="text-gray-500">View students who have purchased textbooks</p>
+          </div>
         </div>
       </div>
 

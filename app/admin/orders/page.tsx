@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from '@/components/ui/badge'
 import { motion } from 'framer-motion'
-import { FileText, Download, Eye, Search } from 'lucide-react'
+import { FileText, Download, Eye, Search, ArrowLeft } from 'lucide-react'
 import { orders } from '@/services/api'
 import Link from 'next/link'
 
@@ -51,8 +51,18 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Orders</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Link href="/admin/dashboard">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Orders</h1>
+            <p className="text-gray-500">View and manage all orders</p>
+          </div>
+        </div>
         <div className="flex items-center gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />

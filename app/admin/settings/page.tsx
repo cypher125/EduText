@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import { motion } from 'framer-motion'
-import { Save, Bell, Shield, CreditCard } from 'lucide-react'
+import { ArrowLeft, Save, Bell, Shield, CreditCard } from 'lucide-react'
+import Link from 'next/link'
 
 export default function SettingsPage() {
   const [notifications, setNotifications] = useState({
@@ -19,9 +20,18 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-500">Manage your application settings</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <Link href="/admin/dashboard">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Settings</h1>
+            <p className="text-gray-500">Manage your application settings</p>
+          </div>
+        </div>
       </div>
 
       <Tabs defaultValue="general" className="space-y-4">

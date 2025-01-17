@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Book, ShoppingCart, Menu } from 'lucide-react'
+import { Book, ShoppingCart, Menu, Receipt } from 'lucide-react'
 import { useCart } from '@/components/CartContext'
 import { useState, useEffect } from 'react'
 
@@ -45,6 +45,12 @@ export default function Header() {
           </Link>
           
           <div className="flex items-center space-x-4">
+            <Link href="/receipts/lookup">
+              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
+                <Receipt className="h-5 w-5" />
+                <span className="ml-2 hidden sm:inline">Find Receipt</span>
+              </Button>
+            </Link>
             <Link href="/cart">
               <Button variant="ghost" className={`hover:text-yellow-300 transition-colors ${
                 isScrolled ? 'text-gray-900 hover:bg-gray-100' : 'text-white'

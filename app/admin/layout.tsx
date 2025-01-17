@@ -44,11 +44,6 @@ const navigation = [
     href: '/admin/reports',
   },
   {
-    icon: <BarChart className="h-5 w-5" />,
-    label: 'Analytics',
-    href: '/admin/analytics',
-  },
-  {
     icon: <Settings className="h-5 w-5" />,
     label: 'Settings',
     href: '/admin/settings',
