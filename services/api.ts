@@ -142,25 +142,25 @@ export const textbooks = {
         const response = await api.get<Textbook[]>('/textbooks/', { params });
         return response.data;
     },
-    get: async (id: number) => {
+    getById: async (id: string) => {
         const response = await api.get<Textbook>(`/textbooks/${id}/`);
-        return response.data;
-    },
-    getFilters: async () => {
-        const response = await api.get<{ departments: string[]; levels: string[] }>('/textbooks/filters/');
         return response.data;
     },
     create: async (data: Partial<Textbook>) => {
         const response = await api.post<Textbook>('/textbooks/', data);
         return response.data;
     },
-    update: async (id: number, data: Partial<Textbook>) => {
+    update: async (id: string, data: Partial<Textbook>) => {
         const response = await api.put<Textbook>(`/textbooks/${id}/`, data);
         return response.data;
     },
-    delete: async (id: number) => {
+    delete: async (id: string) => {
         await api.delete(`/textbooks/${id}/`);
     },
+    getFilters: async () => {
+        const response = await api.get('/textbooks/filters/');
+        return response.data;
+    }
 };
 
 export interface Order {
@@ -226,6 +226,23 @@ export const orders = {
     getByReference: async (reference: string) => {
         const response = await api.get<Order>(`/orders/${reference}/`);
         return response.data;
+    },
+};
+
+export const reports = {
+    getLowStockReport: async () => {
+        try {
+            const response = await api.get('/reports/low-stock/', {
+                responseType: 'blob',
+                headers: {
+                    Accept: 'application/pdf'
+                }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Failed to get low stock report:', error);
+            throw error;
+        }
     },
 };
 

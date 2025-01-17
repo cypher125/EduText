@@ -213,9 +213,11 @@ export default function TextbooksPage() {
                       <Button variant="outline" size="sm" onClick={() => handleEdit(book)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                      <Link href={`/admin/textbooks/${book.id}`}>
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </Link>
                       <Button 
                         variant="outline" 
                         size="sm" 
