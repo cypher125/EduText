@@ -64,6 +64,12 @@ export interface ProfileResponse {
     phone_number: string;
 }
 
+interface ApiError {
+    response?: {
+        status: number;
+    };
+}
+
 export const auth = {
     login: async (username: string, password: string) => {
         const response = await api.post<TokenResponse>('/token/', { username, password });
@@ -86,11 +92,31 @@ export const auth = {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        
+        // Only redirect if we're not already on the login page
+        if (!window.location.pathname.includes('/login')) {
+            window.location.href = '/login';
+        }
     },
     getProfile: async () => {
-        const response = await api.get<ProfileResponse>('/auth/me/');
-        return response.data;
+        try {
+            const response = await api.get<ProfileResponse>('/auth/me/');
+            return response.data;
+        } catch (error: unknown) {
+            if ((error as ApiError)?.response?.status === 401) {
+                auth.logout();
+            }
+            throw error;
+        }
     },
+    isAdmin: async () => {
+        try {
+            const profile = await auth.getProfile();
+            return profile.role === 'admin';
+        } catch {
+            return false;
+        }
+    }
 };
 
 export interface Textbook {
