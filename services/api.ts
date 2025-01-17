@@ -123,7 +123,18 @@ export const textbooks = {
     getFilters: async () => {
         const response = await api.get<{ departments: string[]; levels: string[] }>('/textbooks/filters/');
         return response.data;
-    }
+    },
+    create: async (data: Partial<Textbook>) => {
+        const response = await api.post<Textbook>('/textbooks/', data);
+        return response.data;
+    },
+    update: async (id: number, data: Partial<Textbook>) => {
+        const response = await api.put<Textbook>(`/textbooks/${id}/`, data);
+        return response.data;
+    },
+    delete: async (id: number) => {
+        await api.delete(`/textbooks/${id}/`);
+    },
 };
 
 export interface Order {
@@ -184,6 +195,10 @@ export const orders = {
     },
     getAll: async () => {
         const response = await api.get<Order[]>('/orders/');
+        return response.data;
+    },
+    getByReference: async (reference: string) => {
+        const response = await api.get<Order>(`/orders/${reference}/`);
         return response.data;
     },
 };

@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -12,17 +12,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
+import { Badge } from '@/components/ui/badge'
+import { 
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
@@ -30,99 +27,138 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { motion } from 'framer-motion'
-import { Plus, Edit, Trash2, Eye, Download } from 'lucide-react'
-
-const initialTextbooks = [
-  {
-    id: 1,
-    title: "Engineering Mathematics",
-    course: "MTH101",
-    department: "Engineering",
-    level: "100",
-    price: 59.99,
-    stock: 150,
-    status: "Available"
-  },
-  // Add more textbooks...
-]
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Plus, Edit, Eye, Trash2 } from 'lucide-react'
+import { textbooks } from '@/services/api'
 
 export default function TextbooksPage() {
-  const [textbooks, setTextbooks] = useState(initialTextbooks)
+  const [textbooksList, setTextbooksList] = useState([])
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedDepartment, setSelectedDepartment] = useState('All')
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [editingTextbook, setEditingTextbook] = useState(null)
+  const [formData, setFormData] = useState({
+    title: '',
+    course_code: '',
+    department: '',
+    level: '',
+    price: '',
+    description: '',
+    stock: ''
+  })
 
-  const filteredTextbooks = textbooks.filter(book => 
-    book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    book.course.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  useEffect(() => {
+    fetchTextbooks()
+  }, [])
+
+  const fetchTextbooks = async () => {
+    try {
+      const data = await textbooks.getAll()
+      setTextbooksList(data)
+    } catch (error) {
+      console.error('Failed to fetch textbooks:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAddNew = () => {
+    setEditingTextbook(null)
+    setFormData({
+      title: '',
+      course_code: '',
+      department: '',
+      level: '',
+      price: '',
+      description: '',
+      stock: ''
+    })
+    setIsDialogOpen(true)
+  }
+
+  const handleEdit = (textbook) => {
+    setEditingTextbook(textbook)
+    setFormData({
+      title: textbook.title,
+      course_code: textbook.course_code,
+      department: textbook.department,
+      level: textbook.level,
+      price: textbook.price.toString(),
+      description: textbook.description,
+      stock: textbook.stock.toString()
+    })
+    setIsDialogOpen(true)
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    try {
+      if (editingTextbook) {
+        // Update existing textbook
+        await textbooks.update(editingTextbook.id, formData)
+      } else {
+        // Create new textbook
+        await textbooks.create(formData)
+      }
+      fetchTextbooks()
+      setIsDialogOpen(false)
+    } catch (error) {
+      console.error('Failed to save textbook:', error)
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (confirm('Are you sure you want to delete this textbook?')) {
+      try {
+        await textbooks.delete(id)
+        fetchTextbooks()
+      } catch (error) {
+        console.error('Failed to delete textbook:', error)
+      }
+    }
+  }
+
+  const filteredTextbooks = textbooksList.filter(book => {
+    const matchesSearch = book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         book.course_code.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesDepartment = selectedDepartment === 'All' || book.department === selectedDepartment
+    return matchesSearch && matchesDepartment
+  })
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Textbooks Management</h1>
+          <h1 className="text-3xl font-bold">Textbooks Management</h1>
           <p className="text-gray-500">Manage your textbook inventory and details</p>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="bg-purple-600 hover:bg-purple-700">
-              <Plus className="mr-2 h-4 w-4" />
-              Add New Textbook
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Textbook</DialogTitle>
-              <DialogDescription>
-                Enter the details of the new textbook.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="title" className="text-right">Title</Label>
-                <Input id="title" className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="course" className="text-right">Course Code</Label>
-                <Input id="course" className="col-span-3" />
-              </div>
-              {/* Add more fields */}
-            </div>
-            <DialogFooter>
-              <Button type="submit">Add Textbook</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={handleAddNew} className="bg-purple-600 hover:bg-purple-700">
+          <Plus className="mr-2 h-4 w-4" /> Add New Textbook
+        </Button>
       </div>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle>Textbook Inventory</CardTitle>
-          <div className="flex space-x-2">
+        <CardContent className="pt-6">
+          <div className="flex justify-between items-center mb-6">
             <Input
               placeholder="Search textbooks..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64"
+              className="w-[300px]"
             />
-            <Select
-              value={selectedDepartment}
-              onValueChange={setSelectedDepartment}
-            >
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by Department" />
+            <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select Department" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All Departments</SelectItem>
-                <SelectItem value="Engineering">Engineering</SelectItem>
-                <SelectItem value="Science">Science</SelectItem>
-                {/* Add more departments */}
+                {/* Add department options dynamically */}
               </SelectContent>
             </Select>
           </div>
-        </CardHeader>
-        <CardContent>
+
           <Table>
             <TableHeader>
               <TableRow>
@@ -139,20 +175,29 @@ export default function TextbooksPage() {
               {filteredTextbooks.map((book) => (
                 <TableRow key={book.id}>
                   <TableCell className="font-medium">{book.title}</TableCell>
-                  <TableCell>{book.course}</TableCell>
+                  <TableCell>{book.course_code}</TableCell>
                   <TableCell>{book.department}</TableCell>
-                  <TableCell>₦{book.price.toFixed(2)}</TableCell>
+                  <TableCell>₦{parseFloat(book.price).toFixed(2)}</TableCell>
                   <TableCell>{book.stock}</TableCell>
-                  <TableCell>{book.status}</TableCell>
+                  <TableCell>
+                    <Badge variant={book.stock > 0 ? "success" : "destructive"}>
+                      {book.stock > 0 ? 'Available' : 'Out of Stock'}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(book)}>
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button variant="outline" size="sm">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleDelete(book.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -163,6 +208,33 @@ export default function TextbooksPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{editingTextbook ? 'Edit Textbook' : 'Add New Textbook'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid gap-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="title" className="text-right">Title</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  className="col-span-3"
+                />
+              </div>
+              {/* Add other form fields similarly */}
+            </div>
+            <DialogFooter>
+              <Button type="submit">
+                {editingTextbook ? 'Update Textbook' : 'Add Textbook'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 

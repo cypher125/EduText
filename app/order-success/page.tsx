@@ -28,15 +28,14 @@ export default function OrderSuccessPage() {
             <p className="text-sm text-gray-600">Order Reference:</p>
             <p className="text-lg font-bold text-gray-900">{orderId}</p>
           </div>
-          <div className="space-x-4">
-            <Link href="/catalog">
-              <Button className="bg-purple-600 hover:bg-purple-700">
+          <div className="flex justify-center gap-4 mt-6">
+            <Link href="/browse">
+              <Button variant="secondary">
                 Continue Shopping
               </Button>
             </Link>
-            <Link href={`/receipt/${orderId}`}>
-              <Button variant="outline">
-                <FileText className="mr-2 h-4 w-4" />
+            <Link href={`/receipts/${orderId}`}>
+              <Button>
                 View Receipt
               </Button>
             </Link>

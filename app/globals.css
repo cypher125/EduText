@@ -70,3 +70,27 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  @page {
+    margin: 20mm;
+  }
+
+  body {
+    background: white;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .container {
+    max-width: none;
+    padding: 0;
+  }
+
+  .card {
+    box-shadow: none;
+    border: none;
+  }
+}

@@ -1,249 +1,153 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
-import { Plus, Minus, FileText, ShoppingBag, Users, BookOpen, TrendingUp, DollarSign, Trash2, Edit, Eye, Download } from 'lucide-react'
+import { 
+  BookOpen, 
+  TrendingUp, 
+  DollarSign,
+  FileText,
+  ShoppingBag,
+  ArrowUpRight,
+  ArrowDownRight
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Textarea } from '@/components/ui/textarea'
 import { textbooks, orders } from '@/services/api'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import Link from 'next/link'
 
-export default function AdminDashboard() {
-  const router = useRouter()
-  const { user, loading } = useAuth()
-  const [textbooksList, setTextbooksList] = useState([])
-  const [ordersList, setOrdersList] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [newBook, setNewBook] = useState({ title: '', course: '', price: '', description: '' })
-  const [isAddBookDialogOpen, setIsAddBookDialogOpen] = useState(false)
-  const [editingBook, setEditingBook] = useState(null)
+interface DashboardStats {
+  totalBooks: number
+  totalSales: number
+  totalRevenue: number
+  recentOrders: any[]
+  lowStockBooks: any[]
+  monthlyRevenue: number
+}
+
+export default function DashboardPage() {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalBooks: 0,
+    totalSales: 0,
+    totalRevenue: 0,
+    recentOrders: [],
+    lowStockBooks: [],
+    monthlyRevenue: 0
+  })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== 'admin')) {
-      router.replace('/login')
-    }
-  }, [user, loading, router])
-
-  useEffect(() => {
-    const loadData = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const [textbooksData, ordersData] = await Promise.all([
+        const [booksData, ordersData] = await Promise.all([
           textbooks.getAll(),
           orders.getAll()
         ])
-        setTextbooksList(textbooksData)
-        setOrdersList(ordersData)
+
+        // Calculate stats
+        const totalBooks = booksData.length
+        const totalSales = ordersData.length
+        const totalRevenue = ordersData.reduce((sum, order) => 
+          sum + parseFloat(order.total_amount), 0
+        )
+
+        // Get monthly revenue
+        const currentMonth = new Date().getMonth()
+        const monthlyRevenue = ordersData
+          .filter(order => new Date(order.created_at).getMonth() === currentMonth)
+          .reduce((sum, order) => sum + parseFloat(order.total_amount), 0)
+
+        // Get low stock books (less than 10 copies)
+        const lowStockBooks = booksData
+          .filter(book => book.stock < 10)
+          .slice(0, 5)
+
+        // Get recent orders
+        const recentOrders = ordersData
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, 5)
+
+        setStats({
+          totalBooks,
+          totalSales,
+          totalRevenue,
+          recentOrders,
+          lowStockBooks,
+          monthlyRevenue
+        })
       } catch (error) {
-        console.error('Failed to load data:', error)
+        console.error('Failed to fetch dashboard data:', error)
       } finally {
-        setIsLoading(false)
+        setLoading(false)
       }
     }
 
-    loadData()
+    fetchDashboardData()
   }, [])
 
-  const handleAddBook = () => {
-    const bookToAdd = {
-      id: textbooksList.length + 1,
-      ...newBook,
-      price: parseFloat(newBook.price)
-    }
-    setTextbooksList([...textbooksList, bookToAdd])
-    setNewBook({ title: '', course: '', price: '', description: '' })
-    setIsAddBookDialogOpen(false)
-  }
-
-  const handleEditBook = (book) => {
-    setEditingBook(book)
-    setIsAddBookDialogOpen(true)
-  }
-
-  const handleUpdateBook = () => {
-    const updatedBooks = textbooksList.map(book => 
-      book.id === editingBook.id ? editingBook : book
-    )
-    setTextbooksList(updatedBooks)
-    setEditingBook(null)
-    setIsAddBookDialogOpen(false)
-  }
-
-  const handleDeleteBook = (id) => {
-    setTextbooksList(textbooksList.filter(book => book.id !== id))
-  }
-
-  const generateReport = () => {
-    // In a real application, this would generate a PDF or CSV report
-    console.log("Generating report...")
-    alert("Report generated and downloaded!")
-  }
-
-  if (loading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
-      </div>
-    )
-  }
-
-  if (user.role !== 'admin') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-red-600">Access Denied: Admin privileges required</div>
-      </div>
-    )
+  if (loading) {
+    return <div>Loading...</div>
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      {loading ? (
-        <div>Loading...</div>
-      ) : (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 pt-32">
-      <div className="container mx-auto px-6 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
-        >
-          <Badge className="bg-purple-600 text-white mb-4">Admin Dashboard</Badge>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome, Admin</h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Manage books, view orders, and monitor key metrics.
-          </p>
-        </motion.div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {[
-            { title: "Total Users", value: "1,234", icon: Users, color: "bg-blue-500" },
-            { title: "Total Books", value: "567", icon: BookOpen, color: "bg-green-500" },
-            { title: "Monthly Sales", value: "₦89,012", icon: TrendingUp, color: "bg-yellow-500" },
-            { title: "Revenue", value: "₦123,456", icon: DollarSign, color: "bg-purple-500" },
-          ].map((stat, index) => (
-            <Card key={index} className="bg-white">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <stat.icon className={`h-4 w-4 text-white ${stat.color} rounded-full p-1`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-              </CardContent>
-            </Card>
-          ))}
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Welcome, Admin</h1>
+        <p className="text-gray-500">Manage books, view orders, and monitor key metrics.</p>
         </div>
 
-        <Tabs defaultValue="books" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="books">Manage Books</TabsTrigger>
-            <TabsTrigger value="orders">View Orders</TabsTrigger>
-          </TabsList>
-          <TabsContent value="books">
-            <Card className="bg-white">
-              <CardHeader className="flex justify-between items-center">
-                <CardTitle>Book Management</CardTitle>
-                <Dialog open={isAddBookDialogOpen} onOpenChange={setIsAddBookDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-purple-600 hover:bg-purple-700 text-white">
-                      <Plus className="mr-2 h-4 w-4" /> Add New Book
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>{editingBook ? 'Edit Book' : 'Add New Book'}</DialogTitle>
-                      <DialogDescription>
-                        {editingBook ? 'Edit the book details below.' : 'Enter the details of the new book below.'}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="title" className="text-right">
-                          Title
-                        </Label>
-                        <Input
-                          id="title"
-                          value={editingBook ? editingBook.title : newBook.title}
-                          onChange={(e) => editingBook ? setEditingBook({...editingBook, title: e.target.value}) : setNewBook({...newBook, title: e.target.value})}
-                          className="col-span-3"
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatsCard
+          title="Total Books"
+          value={stats.totalBooks}
+          icon={<BookOpen />}
+          trend={10}
+        />
+        <StatsCard
+          title="Total Sales"
+          value={stats.totalSales}
+          icon={<ShoppingBag />}
+          trend={25}
+        />
+        <StatsCard
+          title="Monthly Revenue"
+          value={`₦${stats.monthlyRevenue.toLocaleString()}`}
+          icon={<TrendingUp />}
+          trend={15}
+        />
+        <StatsCard
+          title="Total Revenue"
+          value={`₦${stats.totalRevenue.toLocaleString()}`}
+          icon={<DollarSign />}
+          trend={20}
                         />
                       </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="course" className="text-right">
-                          Course
-                        </Label>
-                        <Input
-                          id="course"
-                          value={editingBook ? editingBook.course : newBook.course}
-                          onChange={(e) => editingBook ? setEditingBook({...editingBook, course: e.target.value}) : setNewBook({...newBook, course: e.target.value})}
-                          className="col-span-3"
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="price" className="text-right">
-                          Price
-                        </Label>
-                        <Input
-                          id="price"
-                          type="number"
-                          value={editingBook ? editingBook.price : newBook.price}
-                          onChange={(e) => editingBook ? setEditingBook({...editingBook, price: e.target.value}) : setNewBook({...newBook, price: e.target.value})}
-                          className="col-span-3"
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="description" className="text-right">
-                          Description
-                        </Label>
-                        <Textarea
-                          id="description"
-                          value={editingBook ? editingBook.description : newBook.description}
-                          onChange={(e) => editingBook ? setEditingBook({...editingBook, description: e.target.value}) : setNewBook({...newBook, description: e.target.value})}
-                          className="col-span-3"
-                        />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button type="submit" onClick={editingBook ? handleUpdateBook : handleAddBook}>
-                        {editingBook ? 'Update Book' : 'Add Book'}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Orders</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Course</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Actions</TableHead>
+                  <TableHead>Reference</TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                        {textbooksList.map((book) => (
-                      <TableRow key={book.id}>
-                        <TableCell>{book.title}</TableCell>
-                        <TableCell>{book.course}</TableCell>
-                        <TableCell>₦{book.price.toFixed(2)}</TableCell>
+                {stats.recentOrders.map((order) => (
+                  <TableRow key={order.id}>
+                    <TableCell>{order.reference}</TableCell>
+                    <TableCell>{order.student_name}</TableCell>
+                    <TableCell>₦{parseFloat(order.total_amount).toLocaleString()}</TableCell>
                         <TableCell>
-                          <div className="flex space-x-2">
-                            <Button variant="outline" size="sm" onClick={() => handleEditBook(book)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => handleDeleteBook(book.id)}>
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                      <Badge variant="success">Completed</Badge>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -251,56 +155,85 @@ export default function AdminDashboard() {
                 </Table>
               </CardContent>
             </Card>
-          </TabsContent>
-          <TabsContent value="orders">
-            <Card className="bg-white">
+
+        <Card>
               <CardHeader>
-                <CardTitle>Order Management</CardTitle>
+            <CardTitle>Low Stock Alert</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Book Title</TableHead>
-                      <TableHead>Student Name</TableHead>
-                      <TableHead>Level</TableHead>
+                  <TableHead>Title</TableHead>
                       <TableHead>Course</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Total</TableHead>
+                  <TableHead>Stock</TableHead>
+                  <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                        {ordersList.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell>{order.bookTitle}</TableCell>
-                        <TableCell>{order.studentName}</TableCell>
-                        <TableCell>{order.level}</TableCell>
-                        <TableCell>{order.course}</TableCell>
-                        <TableCell>{order.date}</TableCell>
-                        <TableCell>₦{order.total.toFixed(2)}</TableCell>
+                {stats.lowStockBooks.map((book) => (
+                  <TableRow key={book.id}>
+                    <TableCell>{book.title}</TableCell>
+                    <TableCell>{book.course_code}</TableCell>
+                    <TableCell>{book.stock}</TableCell>
+                    <TableCell>
+                      <Badge variant="destructive">Low Stock</Badge>
+                    </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+      </div>
 
-        <div className="mt-8 space-x-4">
-          <Button className="bg-purple-600 hover:bg-purple-700 text-white" onClick={generateReport}>
-            <FileText className="mr-2 h-4 w-4" />
-            Generate Report
+      <div className="flex gap-4">
+        <Link href="/admin/textbooks">
+          <Button className="bg-purple-600 hover:bg-purple-700">
+            <BookOpen className="mr-2 h-4 w-4" />
+            Manage Books
           </Button>
+        </Link>
+        <Link href="/admin/orders">
           <Button variant="outline">
             <ShoppingBag className="mr-2 h-4 w-4" />
-            View All Orders
+            View Orders
           </Button>
-        </div>
+        </Link>
       </div>
-        </div>
-      )}
     </div>
+  )
+}
+
+function StatsCard({ title, value, icon, trend }) {
+  const isPositive = trend > 0
+  
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex justify-between">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-gray-500">{title}</p>
+            <p className="text-2xl font-bold">{value}</p>
+          </div>
+          <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
+            isPositive ? 'bg-green-50' : 'bg-red-50'
+          }`}>
+            {icon}
+          </div>
+        </div>
+        <div className="mt-4 flex items-center space-x-2">
+          {isPositive ? (
+            <ArrowUpRight className="h-4 w-4 text-green-500" />
+          ) : (
+            <ArrowDownRight className="h-4 w-4 text-red-500" />
+          )}
+          <span className={`text-sm ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
+            {Math.abs(trend)}% from last month
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
